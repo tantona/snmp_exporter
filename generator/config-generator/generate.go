@@ -10,7 +10,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// GenerateConfig generates a snmp_exporter config and write it out.
+// GenerateConfig generates a snmp_exporter config and writes it to the outputPath
 func GenerateConfig(nodes *Node, nameToNode map[string]*Node, outputPath string) {
 	outputPath, err := filepath.Abs(outputPath)
 	if err != nil {
