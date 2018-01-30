@@ -1,4 +1,4 @@
-package main
+package generator
 
 import (
 	"regexp"
@@ -6,36 +6,35 @@ import (
 	"strings"
 
 	"github.com/prometheus/common/log"
-
 	"github.com/prometheus/snmp_exporter/config"
 )
 
-// Helper to walk MIB nodes.
-func walkNode(n *Node, f func(n *Node)) {
+// WalkNode is a helper to walk MIB nodes.
+func WalkNode(n *Node, f func(n *Node)) {
 	f(n)
 	for _, c := range n.Children {
-		walkNode(c, f)
+		WalkNode(c, f)
 	}
 }
 
-// Transform the tree
-func prepareTree(nodes *Node) map[string]*Node {
+// PrepareTree transforms the tree
+func PrepareTree(nodes *Node) map[string]*Node {
 	// Build a map from names and oids to nodes.
 	nameToNode := map[string]*Node{}
-	walkNode(nodes, func(n *Node) {
+	WalkNode(nodes, func(n *Node) {
 		nameToNode[n.Oid] = n
 		nameToNode[n.Label] = n
 	})
 
 	// Trim down description to first sentance, removing extra whitespace.
-	walkNode(nodes, func(n *Node) {
+	WalkNode(nodes, func(n *Node) {
 		s := strings.Join(strings.Fields(n.Description), " ")
 		n.Description = strings.Split(s, ". ")[0]
 	})
 
 	// Fix indexes to "INTEGER" rather than an object name.
 	// Example: snSlotsEntry in LANOPTICS-HUB-MIB
-	walkNode(nodes, func(n *Node) {
+	WalkNode(nodes, func(n *Node) {
 		indexes := []string{}
 		for _, i := range n.Indexes {
 			if i == "INTEGER" {
@@ -49,7 +48,7 @@ func prepareTree(nodes *Node) map[string]*Node {
 	})
 
 	// Copy over indexes based on augments.
-	walkNode(nodes, func(n *Node) {
+	WalkNode(nodes, func(n *Node) {
 		if n.Augments == "" {
 			return
 		}
@@ -65,7 +64,7 @@ func prepareTree(nodes *Node) map[string]*Node {
 	})
 
 	// Copy indexes from table entries down to the entries.
-	walkNode(nodes, func(n *Node) {
+	WalkNode(nodes, func(n *Node) {
 		if len(n.Indexes) != 0 {
 			for _, c := range n.Children {
 				c.Indexes = n.Indexes
@@ -78,7 +77,7 @@ func prepareTree(nodes *Node) map[string]*Node {
 	displayStringRe := regexp.MustCompile(`\d+[at]`)
 
 	// Set type on MAC addresses and strings.
-	walkNode(nodes, func(n *Node) {
+	WalkNode(nodes, func(n *Node) {
 		// RFC 2579
 		switch n.Hint {
 		case "1x:":
@@ -162,7 +161,7 @@ func generateConfigModule(cfg *ModuleConfig, node *Node, nameToNode map[string]*
 	for _, oid := range toWalk {
 		node := nameToNode[oid]
 		needToWalk[node.Oid] = struct{}{}
-		walkNode(node, func(n *Node) {
+		WalkNode(node, func(n *Node) {
 			t, ok := metricType(n.Type)
 			if !ok {
 				return // Unsupported type.

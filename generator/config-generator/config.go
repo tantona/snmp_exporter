@@ -1,4 +1,4 @@
-package main
+package generator
 
 import "github.com/prometheus/snmp_exporter/config"
 

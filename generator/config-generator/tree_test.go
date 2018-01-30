@@ -1,4 +1,4 @@
-package main
+package generator
 
 import (
 	"reflect"
@@ -95,20 +95,20 @@ func TestTreePrepare(t *testing.T) {
 	}
 	for i, c := range cases {
 		// Indexes always end up initilized.
-		walkNode(c.out, func(n *Node) {
+		WalkNode(c.out, func(n *Node) {
 			if n.Indexes == nil {
 				n.Indexes = []string{}
 			}
 		})
 
-		_ = prepareTree(c.in)
+		_ = PrepareTree(c.in)
 
 		if !reflect.DeepEqual(c.in, c.out) {
 			t.Errorf("prepareTree: difference in case %d", i)
-			walkNode(c.in, func(n *Node) {
+			WalkNode(c.in, func(n *Node) {
 				t.Errorf("Got: %+v", n)
 			})
-			walkNode(c.out, func(n *Node) {
+			WalkNode(c.out, func(n *Node) {
 				t.Errorf("Wanted: %+v\n\n", n)
 			})
 
@@ -794,7 +794,7 @@ func TestGenerateConfigModule(t *testing.T) {
 			}
 		}
 
-		nameToNode := prepareTree(c.node)
+		nameToNode := PrepareTree(c.node)
 		got := generateConfigModule(c.cfg, c.node, nameToNode)
 		if !reflect.DeepEqual(got, c.out) {
 			t.Errorf("GenerateConfigModule: difference in case %d", i)

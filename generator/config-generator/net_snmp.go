@@ -1,4 +1,4 @@
-package main
+package generator
 
 /*
 #cgo LDFLAGS: -lnetsnmp -L/usr/local/lib
@@ -102,7 +102,7 @@ var (
 // Initilise NetSNMP. Returns MIB parse errors.
 //
 // Warning: This function plays with the stderr file descriptor.
-func initSNMP() string {
+func InitSNMP() string {
 	// Load all the MIBs.
 	os.Setenv("MIBS", "ALL")
 	// Help the user find their MIB directories.
@@ -194,8 +194,8 @@ func buildMIBTree(t *C.struct_tree, n *Node, oid string) {
 	n.Indexes = indexes
 }
 
-// Convert the NetSNMP MIB tree to a Go data structure.
-func getMIBTree() *Node {
+// GetMIBTree converts the NetSNMP MIB tree to a Go data structure.
+func GetMIBTree() *Node {
 
 	tree := C.get_tree_head()
 	head := &Node{}
